@@ -1,9 +1,10 @@
 #!/usr/bin/env ruby
+# -*- coding: utf-8 -*-
 #
 # Example script which queries the database for an
 # label and displays the label's data.
 # 
-# $Id$
+# $Id: getlabel.rb 254 2009-05-13 20:04:36Z phw $
 
 # Just make sure we can run this example from the command
 # line even if RBrainz is not yet installed properly.

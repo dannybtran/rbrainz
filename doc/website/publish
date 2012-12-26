@@ -1,3 +1,0 @@
-#!/bin/sh
-
-scp -r index.html screen.css feed.js img/* phw@rubyforge.org:/var/www/gforge-projects/rbrainz

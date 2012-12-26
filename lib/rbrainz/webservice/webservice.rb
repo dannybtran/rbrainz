@@ -1,4 +1,4 @@
-# $Id$
+# $Id: webservice.rb 319 2011-04-19 20:49:49Z phw $
 #
 # Author::    Philipp Wolfer (mailto:phw@rubyforge.org)
 # Copyright:: Copyright (c) 2007, Nigel Graham, Philipp Wolfer
@@ -72,7 +72,7 @@ module MusicBrainz
       # [:username] The username to authenticate with.
       # [:password] The password to authenticate with.
       # [:user_agent] Value sent in the User-Agent HTTP header. Defaults to "rbrainz/#{RBRAINZ_VERSION}"
-      # [:proxy] URL for the proxy server to connect through
+      # [:proxy] URI for the proxy server to connect through
       def initialize(options={ :host=>nil, :port=>nil, :path_prefix=>'/ws', :username=>nil, :password=>nil, :user_agent=>"rbrainz/#{RBRAINZ_VERSION}", :proxy=>nil })
         Utils.check_options options, :host, :port, :path_prefix, :username, :password, :user_agent, :proxy
         @host = options[:host] ? options[:host] : 'musicbrainz.org'
@@ -83,14 +83,7 @@ module MusicBrainz
         @user_agent = options[:user_agent] ? options[:user_agent] : "rbrainz/#{RBRAINZ_VERSION}"
         @open_timeout = nil
         @read_timeout = nil
-        @proxy = {}
-        unless options[:proxy].nil?
-          uri = URI.parse( options[:proxy] )
-          @proxy[:host], @proxy[:port] = uri.host, uri.port
-          if uri.userinfo
-            @proxy[:username], @proxy[:password] = uri.userinfo.split(/:/)
-          end
-        end
+        set_proxy_options(options)
       end
     
       # Query the Webservice with HTTP GET.
@@ -108,55 +101,9 @@ module MusicBrainz
       # See:: IWebservice#get
       def get(entity_type, options={ :id=>nil, :include=>nil, :filter=>nil, :version=>1 })
         Utils.check_options options, :id, :include, :filter, :version
-        url = URI.parse(create_uri(entity_type, options))
-        request = Net::HTTP::Get.new(url.request_uri)
-        request['User-Agent'] = @user_agent
-        connection = Net::HTTP.new(url.host, url.port, @proxy[:host], @proxy[:port])
-        
-        # Set timeouts
-        connection.open_timeout = @open_timeout if @open_timeout
-        connection.read_timeout = @read_timeout if @read_timeout
-        
-        # Make the request
-        begin
-          response = connection.start do |http|
-            response = http.request(request)
-            if response.is_a?(Net::HTTPProxyAuthenticationRequired) && @proxy[:username] && @proxy[:password]
-              request = Net::HTTP::Post.new(url.request_uri)
-              request['User-Agent'] = @user_agent
-              request.proxy_select_auth(@proxy[:username], @proxy[:password], response)
-              request.set_form_data(options[:params])
-              response = http.request(request)
-            end
-
-            if response.is_a?(Net::HTTPUnauthorized) && @username && @password
-              request = Net::HTTP::Get.new(url.request_uri)
-              request['User-Agent'] = @user_agent
-              request.select_auth @username, @password, response
-              response = http.request(request)
-            end
-            response
-          end
-        rescue Timeout::Error, Errno::ETIMEDOUT
-          raise ConnectionError.new('%s timed out' % url.to_s)
-        rescue SocketError => e
-          raise ConnectionError.new('%s (%s)' % [url.to_s, e.to_s])
-        end
-        
-        # Handle response errors.
-        if response.is_a? Net::HTTPBadRequest # 400
-          raise RequestError.new(url.to_s)
-        elsif response.is_a? Net::HTTPUnauthorized # 401
-          raise AuthenticationError.new(url.to_s)
-        elsif response.is_a? Net::HTTPNotFound # 404
-          raise ResourceNotFoundError.new(url.to_s)
-        elsif response.is_a? Net::HTTPForbidden 
-          raise AuthenticationError.new(url.to_s)
-        elsif not response.is_a? Net::HTTPSuccess
-          raise ConnectionError.new(response.class.name)
-        end
-        
-        return ::StringIO.new(response.body)
+        uri = create_uri(entity_type, options)
+        response = open_connection_and_make_request(uri, :get)
+        return response
       end
       
       # Send data to the web service via HTTP-POST.
@@ -177,68 +124,36 @@ module MusicBrainz
       # See:: IWebservice#post
       def post(entity_type, options={ :id=>nil, :params=>[], :version=>1 })
         Utils.check_options options, :id, :params, :version
-        url = URI.parse(create_uri(entity_type, options))
-        request = Net::HTTP::Post.new(url.request_uri)
-        request['User-Agent'] = @user_agent
-        request.set_form_data(options[:params])
-        connection = Net::HTTP.new(url.host, url.port, @proxy[:host], @proxy[:port])
-        
-        # Set timeouts
-        connection.open_timeout = @open_timeout if @open_timeout
-        connection.read_timeout = @read_timeout if @read_timeout
-        
-        # Make the request
-        begin
-          response = connection.start do |http|
-            response = http.request(request)
-            
-            if response.is_a?(Net::HTTPProxyAuthenticationRequired) && @proxy[:username] && @proxy[:password]
-              request = Net::HTTP::Post.new(url.request_uri)
-              request['User-Agent'] = @user_agent
-              request.proxy_select_auth(@proxy[:username], @proxy[:password], response)
-              request.set_form_data(options[:params])
-              response = http.request(request)
-            end
-            if response.is_a?(Net::HTTPUnauthorized) && @username && @password
-              request = Net::HTTP::Post.new(url.request_uri)
-              request['User-Agent'] = @user_agent
-              request.select_auth( @username, @password, response)
-              request.set_form_data(options[:params])
-              response = http.request(request)
-            end
-            response
-          end
-        rescue Timeout::Error, Errno::ETIMEDOUT
-          raise ConnectionError.new('%s timed out' % url.to_s)
-        rescue SocketError => e
-          raise ConnectionError.new('%s (%s)' % [url.to_s, e.to_s])
-        end
-        
-        # Handle response errors.
-        if response.is_a? Net::HTTPBadRequest # 400
-          raise RequestError.new(url.to_s)
-        elsif response.is_a? Net::HTTPUnauthorized # 401
-          raise AuthenticationError.new(url.to_s)
-        elsif response.is_a? Net::HTTPNotFound # 404
-          raise ResourceNotFoundError.new(url.to_s)
-        elsif response.is_a? Net::HTTPForbidden 
-          raise AuthenticationError.new(url.to_s)
-        elsif not response.is_a? Net::HTTPSuccess
-          raise ConnectionError.new(response.class.name)
-        end
-        
-        return ::StringIO.new(response.body)
+        uri = create_uri(entity_type, options)
+        response = open_connection_and_make_request(uri, :post, options[:params])
+        return response
       end
       
       private # ----------------------------------------------------------------
       
+      def set_proxy_options(options)
+        @proxy = {}
+        unless options[:proxy].nil?
+          uri = URI.parse( options[:proxy] )
+          @proxy[:host], @proxy[:port] = uri.host, uri.port
+          if uri.userinfo
+            @proxy[:username], @proxy[:password] = uri.userinfo.split(/:/)
+          end
+        end
+      end
+      
       # Builds a request URI for querying the webservice.
-      def create_uri(entity_type, options = {:id=>nil, :include=>nil, :filter=>nil, :version=>1, :type=>nil})
+      def create_uri(entity_type, options = {:id=>nil, :include=>nil, :filter=>nil, :version=>1, :type=>'xml'})
         # Make sure the version is set
         options[:version] = 1 if options[:version].nil?
         options[:type] = 'xml' if options[:type].nil?
-        
-        # Build the URI
+        uri = build_uri_without_querystring(entity_type, options)
+        uri = append_querystring_to_uri(uri, options)
+        return URI.parse(uri)
+      end
+      
+      def build_uri_without_querystring(entity_type, options)
+        entity_type = Utils.entity_type_to_string(entity_type)
         if options[:id]
           # Make sure the id is a MBID object
           id = options[:id]
@@ -252,14 +167,89 @@ module MusicBrainz
           uri = 'http://%s:%d%s/%d/%s/' %
                 [@host, @port, @path_prefix, options[:version], entity_type]
         end
-        
-        # Append the querystring
+        return uri
+      end
+      
+      def append_querystring_to_uri(uri, options)
         querystring = []
         querystring << 'type=' + CGI.escape(options[:type]) unless options[:type].nil?
         querystring << options[:include].to_s unless options[:include].nil?
         querystring << options[:filter].to_s unless options[:filter].nil?
         uri += '?' + querystring.join('&') unless querystring.empty? 
-        return uri
+      end
+      
+      def open_connection_and_make_request(uri, request_type, form_data=nil)
+        connection = create_connection(uri)
+        response = make_request(connection, uri, request_type, form_data)
+        handle_response_errors(uri, response)
+        return ::StringIO.new(response.body)  
+      end
+      
+      def create_connection(uri)
+        connection = Net::HTTP.new(uri.host, uri.port, @proxy[:host], @proxy[:port])
+        #connection.set_debug_output $stderr
+        set_connection_timeouts(connection)
+        return connection
+      end
+      
+      def make_request(connection, uri, request_type, form_data=nil)
+        response = nil
+        begin
+          connection.start do |http|
+            request = create_request(uri, request_type, form_data)
+            response = http.request(request)
+            if response.is_a?(Net::HTTPProxyAuthenticationRequired) && @proxy[:username] && @proxy[:password]
+              request = create_request(uri, request_type, form_data)
+              request.proxy_select_auth(@proxy[:username], @proxy[:password], response)
+              response = http.request(request)
+            end
+
+            if response.is_a?(Net::HTTPUnauthorized) && @username && @password
+              request = create_request(uri, request_type, form_data)
+              request.select_auth @username, @password, response
+              response = http.request(request)
+            end
+            response
+          end
+        rescue Timeout::Error, Errno::ETIMEDOUT
+          raise ConnectionError.new('%s timed out' % uri.to_s)
+        rescue SocketError => e
+          raise ConnectionError.new('%s (%s)' % [uri.to_s, e.to_s])
+        rescue ::Exception => e
+          raise ConnectionError.new(e.to_s) 
+        end
+        return response
+      end
+      
+      def set_connection_timeouts(connection)
+        connection.open_timeout = @open_timeout if @open_timeout
+        connection.read_timeout = @read_timeout if @read_timeout
+      end
+      
+      def create_request(uri, request_type, form_data=nil)
+        if request_type == :post
+          request = Net::HTTP::Post.new(uri.request_uri)
+        else
+          request = Net::HTTP::Get.new(uri.request_uri)
+        end
+        request['User-Agent'] = @user_agent
+        request.set_form_data(form_data) unless form_data.nil?
+        return request
+      end
+      
+      # Handles response errors and raises appropriate exceptions
+      def handle_response_errors(uri, response)
+        if response.is_a? Net::HTTPBadRequest # 400
+          raise RequestError.new(uri.to_s)
+        elsif response.is_a? Net::HTTPUnauthorized # 401
+          raise AuthenticationError.new(uri.to_s)
+        elsif response.is_a? Net::HTTPNotFound # 404
+          raise ResourceNotFoundError.new(uri.to_s)
+        elsif response.is_a? Net::HTTPForbidden 
+          raise AuthenticationError.new(uri.to_s)
+        elsif not response.is_a? Net::HTTPSuccess
+          raise ConnectionError.new(response.class.name)
+        end
       end
     
     end

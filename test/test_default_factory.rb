@@ -1,4 +1,5 @@
-# $Id$
+# -*- coding: utf-8 -*-
+# $Id: test_default_factory.rb 273 2009-05-24 22:29:04Z phw $
 #
 # Author::    Philipp Wolfer (mailto:phw@rubyforge.org)
 # Copyright:: Copyright (c) 2007, Philipp Wolfer
@@ -28,6 +29,12 @@ class TestDefaultFactory < Test::Unit::TestCase
     factory = Model::DefaultFactory.new
     assert factory.new_label.is_a?(Model::Label)
     assert factory.new_entity(:label).is_a?(Model::Label)
+  end
+
+  def test_new_release_group
+    factory = Model::DefaultFactory.new
+    assert factory.new_release_group.is_a?(Model::ReleaseGroup)
+    assert factory.new_entity(Model::ReleaseGroup.entity_type).is_a?(Model::ReleaseGroup)
   end
 
   def test_new_release

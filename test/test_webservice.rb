@@ -1,4 +1,5 @@
-# $Id$
+# -*- coding: utf-8 -*-
+# $Id: test_webservice.rb 254 2009-05-13 20:04:36Z phw $
 #
 # Author::    Philipp Wolfer (mailto:phw@rubyforge.org)
 # Copyright:: Copyright (c) 2007, Philipp Wolfer
@@ -18,6 +19,15 @@ class TestWebservice < Test::Unit::TestCase
   end
 
   def teardown
+  end
+  
+  def test_base_exception
+    assert_inherited_from(Webservice::WebserviceError, ::Exception)
+    assert_inherited_from(Webservice::ConnectionError, Webservice::WebserviceError)
+    assert_inherited_from(Webservice::RequestError, Webservice::WebserviceError)
+    assert_inherited_from(Webservice::AuthenticationError, Webservice::WebserviceError)
+    assert_inherited_from(Webservice::ResourceNotFoundError, Webservice::WebserviceError)
+    assert_inherited_from(Webservice::ResponseError, Webservice::WebserviceError)
   end
   
   def test_get_success

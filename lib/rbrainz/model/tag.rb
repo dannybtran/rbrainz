@@ -1,4 +1,5 @@
-# $Id$
+# -*- coding: utf-8 -*-
+# $Id: tag.rb 254 2009-05-13 20:04:36Z phw $
 #
 # Author::    Philipp Wolfer (mailto:phw@rubyforge.org)
 # Copyright:: Copyright (c) 2007, Nigel Graham, Philipp Wolfer
@@ -23,8 +24,8 @@ module MusicBrainz
       attr_accessor :count
       
       def initialize(text=nil, count=nil)
-        self.text  = text
-        self.count = count
+        @text  = text
+        @count = count
       end
       
       # Convert this tag into a String. Will return text.

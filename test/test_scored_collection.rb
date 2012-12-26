@@ -1,4 +1,5 @@
-# $Id: test_collection.rb 114 2007-07-10 19:33:22Z phw $
+# -*- coding: utf-8 -*-
+# $Id: test_scored_collection.rb 273 2009-05-24 22:29:04Z phw $
 #
 # Author::    Philipp Wolfer (mailto:phw@rubyforge.org)
 # Copyright:: Copyright (c) 2007, Philipp Wolfer

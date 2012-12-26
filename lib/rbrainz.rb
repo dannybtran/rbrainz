@@ -1,4 +1,5 @@
-# $Id$
+# -*- coding: utf-8 -*-
+# $Id: rbrainz.rb 254 2009-05-13 20:04:36Z phw $
 #
 # This is actually just a convenient shortcut that allows
 # the user to use RBrainz by just using <tt>require 'rbrainz'</tt>.

@@ -1,9 +1,10 @@
 #!/usr/bin/env ruby
+# -*- coding: utf-8 -*-
 #
 # Example script which queries the database for an
 # artist and displays the artist's data.
 # 
-# $Id$
+# $Id: getartist.rb 273 2009-05-24 22:29:04Z phw $
 
 # Just make sure we can run this example from the command
 # line even if RBrainz is not yet installed properly.

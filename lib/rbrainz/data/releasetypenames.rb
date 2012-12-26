@@ -1,4 +1,5 @@
-# $Id$
+# -*- coding: utf-8 -*-
+# $Id: releasetypenames.rb 273 2009-05-24 22:29:04Z phw $
 #
 # Author::    Philipp Wolfer (mailto:phw@rubyforge.org)
 # Copyright:: Copyright (c) 2007, Nigel Graham, Philipp Wolfer

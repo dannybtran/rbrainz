@@ -1,4 +1,5 @@
-# $Id$
+# -*- coding: utf-8 -*-
+# $Id: query.rb 270 2009-05-24 22:15:29Z phw $
 #
 # Author::    Philipp Wolfer (mailto:phw@rubyforge.org)
 # Copyright:: Copyright (c) 2007, Nigel Graham, Philipp Wolfer
@@ -179,7 +180,7 @@ module MusicBrainz
       # or a options hash as expected by ArtistIncludes.
       # 
       # If no artist with that ID can be found, include contains invalid tags
-      # or there's a server problem, and exception is raised.
+      # or there's a server problem, an exception is raised.
       # 
       # Raises:: ConnectionError, RequestError, ResourceNotFoundError, ResponseError
       def get_artist_by_id(id, includes = nil)
@@ -187,10 +188,10 @@ module MusicBrainz
         return get_entity_by_id(Model::Artist.entity_type, id, includes)
       end
       
-      # Returns artists matching given criteria.
+      # Returns artists matching the given criteria.
       # 
       # The parameter _filter_ must be an instance of ArtistFilter
-      # or a options hash as expected by ArtistFilter.
+      # or an option hash as expected by ArtistFilter.
       # 
       # Raises:: ConnectionError, RequestError, ResponseError
       def get_artists(filter)
@@ -198,13 +199,38 @@ module MusicBrainz
         return get_entities(Model::Artist.entity_type, filter)
       end
       
-      # Returns an release.
+      # Returns a release group.
+      # 
+      # The parameter _includes_ must be an instance of ReleaseGroupIncludes
+      # or a options hash as expected by ReleaseGroupIncludes.
+      # 
+      # If no release group with that ID can be found, include contains invalid
+      # tags or there's a server problem, an exception is raised.
+      # 
+      # Raises:: ConnectionError, RequestError, ResourceNotFoundError, ResponseError
+      def get_release_group_by_id(id, includes = nil)
+        includes = ReleaseGroupIncludes.new(includes) unless includes.nil? || includes.is_a?(ReleaseGroupIncludes)
+        return get_entity_by_id(Model::ReleaseGroup.entity_type, id, includes)
+      end
+      
+      # Returns release groups matching the given criteria.
+      # 
+      # The parameter _filter_ must be an instance of ReleaseGroupFilter
+      # or an option hash as expected by ReleaseGroupFilter.
+      # 
+      # Raises:: ConnectionError, RequestError, ResponseError
+      def get_release_groups(filter)
+        filter = ReleaseGroupFilter.new(filter) unless filter.nil? || filter.is_a?(ReleaseGroupFilter)
+        return get_entities(Model::ReleaseGroup.entity_type, filter)
+      end
+      
+      # Returns a release.
       # 
       # The parameter _includes_ must be an instance of ReleaseIncludes
       # or a options hash as expected by ReleaseIncludes.
       # 
       # If no release with that ID can be found, include contains invalid tags
-      # or there's a server problem, and exception is raised.
+      # or there's a server problem, an exception is raised.
       # 
       # Raises:: ConnectionError, RequestError, ResourceNotFoundError, ResponseError
       def get_release_by_id(id, includes = nil)
@@ -212,10 +238,10 @@ module MusicBrainz
         return get_entity_by_id(Model::Release.entity_type, id, includes)
       end
       
-      # Returns releases matching given criteria.
+      # Returns releases matching the given criteria.
       # 
       # The parameter _filter_ must be an instance of ReleaseFilter
-      # or a options hash as expected by ReleaseFilter.
+      # or an option hash as expected by ReleaseFilter.
       # 
       # Raises:: ConnectionError, RequestError, ResponseError
       def get_releases(filter)
@@ -223,13 +249,13 @@ module MusicBrainz
         return get_entities(Model::Release.entity_type, filter)
       end
       
-      # Returns an track.
+      # Returns a track.
       # 
       # The parameter _includes_ must be an instance of TrackIncludes
       # or a options hash as expected by TrackIncludes.
       # 
       # If no track with that ID can be found, include contains invalid tags
-      # or there's a server problem, and exception is raised.
+      # or there's a server problem, an exception is raised.
       # 
       # Raises:: ConnectionError, RequestError, ResourceNotFoundError, ResponseError
       def get_track_by_id(id, includes = nil)
@@ -237,10 +263,10 @@ module MusicBrainz
         return get_entity_by_id(Model::Track.entity_type, id, includes)
       end
       
-      # Returns tracks matching given criteria.
+      # Returns tracks matching the given criteria.
       # 
       # The parameter _filter_ must be an instance of TrackFilter
-      # or a options hash as expected by TrackFilter.
+      # or an option hash as expected by TrackFilter.
       # 
       # Raises:: ConnectionError, RequestError, ResponseError
       def get_tracks(filter)
@@ -295,7 +321,7 @@ module MusicBrainz
       # Submit track to PUID mappings.
       #
       # The <em>tracks2puids</em> parameter has to be a Hash or Array
-      # with track ID/PUID pairs. The track IDs are either instances of MBID,
+      # with track ID/PUID pairs. The track IDs are either instances of Model::MBID,
       # absolute URIs or the 36 character ASCII representation. PUIDs are 
       # 36 characters ASCII strings.
       # 
@@ -333,9 +359,59 @@ module MusicBrainz
         @webservice.post(:track, :params=>params)
       end
       
-      # Submit tags for an entity. _mbid_ must be an instance of MBID identifying
+      # Submit track to ISRC mappings.
+      #
+      # The <em>tracks2isrcs</em> parameter has to be a Hash or Array
+      # with track ID/ISRC pairs. The track IDs are either instances of Model::MBID,
+      # absolute URIs or the 36 character ASCII representation. ISRCs are either
+      # instances of Model::ISRC or 12 character ASCII strings.
+      # 
+      # Example:
+      #  ws = Webservice::Webservice.new(
+      #         :host     => 'test.musicbrainz.org',
+      #         :username => 'outsidecontext',
+      #         :password => 'secret'
+      #  ) 
+      #  
+      #  query = Webservice::Query.new(ws, :client_id=>'My Tagging App 1.0')
+      #  
+      #  query.submit_isrcs([
+      #    ['7f574ec1-344c-4ae1-970d-3c757f9a717e', 'DED830049301'],
+      #    ['1393122c-364c-4fb6-9a4b-17eddce90152', 'DED830049302'],
+      #    ['2634965c-5299-4958-b0dc-47b166bb6898', 'DED830049303'],
+      #    ['dad6b8a4-0412-4a80-9123-3e0ebddaf82d', 'DED830049304'],
+      #    ['e1f7e805-33f3-4663-b294-3805b82405f9', 'DED830049305'],
+      #    ['d9f932ad-de0d-44ca-bf35-ae8184f63909', 'DED830049306'],
+      #    ['c983b62d-f528-433f-a402-a6317ce3d2d8', 'DED830049307'],
+      #    ['9d50b06a-4136-427f-8d11-b2efb0141da6', 'DED830049308'],
+      #    ['f2af3e3f-3f9f-4f8d-8b60-1d1b709aaf69', 'DED830049309'],
+      #    ['059384bc-fb45-445e-ab77-950d6ccf587a', 'DED830049310'],
+      #    ['2f4d7b47-a4ba-495a-b447-60b8287ed9c9', 'DED830049311'],
+      #  ])
+      #
+      # Note that this method only works if a valid user name and
+      # password have been set. If username and/or password are incorrect,
+      # an AuthenticationError is raised. See the example in Query on
+      # how to supply authentication data.
+      #
+      # See:: http://musicbrainz.org/doc/ISRC
+      # Raises:: ConnectionError, RequestError, AuthenticationError, InvalidISRCError
+      def submit_isrcs(tracks2isrcs)
+        raise RequestError, 'Please supply a client ID' unless @client_id
+        params = [['client', @client_id.to_s]] # Encoded as utf-8
+
+        tracks2isrcs.each do |track_id, isrc|
+          track_id = Model::MBID.parse(track_id, :track).uuid
+          isrc = Model::ISRC.parse(isrc)
+          params << ['isrc', track_id + ' ' + isrc.to_str ]
+        end
+
+        @webservice.post(:track, :params=>params)
+      end
+      
+      # Submit tags for an entity. _mbid_ must be an instance of Model::MBID identifying
       # the entity the tag should applied to and _tags_ is either and array or
-      # Collection of Tag objects or a string with comma separated tags.
+      # Collection of Model::Tag objects or a string with comma separated tags.
       # 
       # Note that this method only works if a valid user name and password have
       # been set. The tags will be applied for the authenticated user. If
@@ -393,6 +469,70 @@ module MusicBrainz
       def get_user_tags(mbid)
         mbid = Model::MBID.parse(mbid)
         return get_entities(:tag, "entity=#{mbid.entity}&id=#{mbid.uuid}").to_collection
+      end
+      
+      # Submit the user's rating for an entity. _mbid_ must be an instance of
+      # Model::MBID identifying the entity which should be rated and _rating_ is
+      # either a Model::Rating object or an integer value between 0 and 5.
+      # 
+      # Note that this method only works if a valid user name and password have
+      # been set. The tags will be applied for the authenticated user. If
+      # username and/or password are incorrect, an AuthenticationError is raised.
+      # See the example in Query on how to supply authentication data.
+      #
+      # Example:
+      #  ws = Webservice::Webservice.new(
+      #         :host     => 'test.musicbrainz.org',
+      #         :username => 'outsidecontext',
+      #         :password => 'secret'
+      #  ) 
+      #  
+      #  query = Webservice::Query.new(ws)
+      #
+      #  mbid = Model::MBID.new('http://musicbrainz.org/artist/10bf95b6-30e3-44f1-817f-45762cdc0de0')
+      #  query.submit_user_rating(mbid, 5)
+      # 
+      # See:: Model::Rating
+      # Raises:: ConnectionError, RequestError, AuthenticationError
+      def submit_user_rating(mbid, rating)
+        mbid = Model::MBID.parse(mbid)
+        params = {:entity=>mbid.entity, :id=>mbid.uuid, :rating=>rating.to_i}
+        @webservice.post(:rating, :params=>params)
+      end
+      
+      # Returns the Model::Rating a user has applied to the entity
+      # identified by _mbid_.
+      # 
+      # Note that this method only works if a valid user name and password have
+      # been set. Only the tags the authenticated user applied to the entity will
+      # be returned. If username and/or password are incorrect, an
+      # AuthenticationError is raised. See the example in Query on how to supply
+      # authentication data.
+      #
+      # Example:
+      #  ws = Webservice::Webservice.new(
+      #         :host     => 'test.musicbrainz.org',
+      #         :username => 'outsidecontext',
+      #         :password => 'secret'
+      #  ) 
+      #  
+      #  query = Webservice::Query.new(ws)
+      #
+      #  mbid = Model::MBID.new('http://musicbrainz.org/artist/10bf95b6-30e3-44f1-817f-45762cdc0de0')
+      #  rating = query.get_user_rating(mbid)
+      # 
+      # See:: Model::Rating
+      # Raises:: ConnectionError, RequestError, ResponseError, AuthenticationError
+      def get_user_rating(mbid)
+        mbid = Model::MBID.parse(mbid)
+        stream = @webservice.get(:rating, :filter => "entity=#{mbid.entity}&id=#{mbid.uuid}")
+        begin
+          rating = MBXML.new(stream, @factory).get_entity(:user_rating)
+        rescue MBXML::ParseError => e
+          raise ResponseError, e.to_s
+        end
+        rating = Model::Rating.new unless rating
+        return rating
       end
       
       private # ----------------------------------------------------------------

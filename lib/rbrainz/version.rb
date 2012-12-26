@@ -1,4 +1,5 @@
-# $Id$
+# -*- coding: utf-8 -*-
+# $Id: version.rb 322 2011-04-28 20:16:42Z phw $
 #
 # Version information.
 #
@@ -10,6 +11,6 @@
 module MusicBrainz
 
   # The version of the RBrainz library.
-  RBRAINZ_VERSION = '0.4.2'
+  RBRAINZ_VERSION = '0.5.2'
 
 end

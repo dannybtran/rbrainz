@@ -1,4 +1,5 @@
-# $Id$
+# -*- coding: utf-8 -*-
+# $Id: test_mbid.rb 288 2009-08-04 12:50:09Z phw $
 #
 # Author::    Philipp Wolfer (mailto:phw@rubyforge.org)
 # Copyright:: Copyright (c) 2007, Philipp Wolfer
@@ -13,8 +14,8 @@ include MusicBrainz
 class TestMBID < Test::Unit::TestCase
 
   def setup
-    @valid_entities = [:artist, :release, :track, :label,
-                       'artist', 'release', 'track', 'label']
+    @valid_entities = [:artist, :release, :track, :label, :release_group,
+                       'artist', 'release', 'track', 'label', 'release-group']
     @valid_uuids = ['9d30e408-1559-448b-b491-2f8de1583ccf']
     @invalid_uris = [nil, '', 'http://musicbrainz.org/labels/727ad90b-7ef4-48d2-8f16-c34016544822',
                      'http://musicbrainz.org/label/727ad90b-7ef4-48d2-8f16-c34016544822?']
@@ -48,7 +49,7 @@ class TestMBID < Test::Unit::TestCase
     @valid_entities.each{|entity|
       @valid_uuids.each{|uuid|
         assert_nothing_raised \
-          {Model::MBID.parse 'http://musicbrainz.org/' + entity.to_s + '/' + uuid }
+          {Model::MBID.parse 'http://musicbrainz.org/' +  Utils.entity_type_to_string(entity) + '/' + uuid }
       }
     }
     @invalid_uris.each{|uri|
@@ -75,7 +76,7 @@ class TestMBID < Test::Unit::TestCase
   def test_to_s
     @valid_entities.each{|entity|
       @valid_uuids.each{|uuid|
-        uri = 'http://musicbrainz.org/' + entity.to_s + '/' + uuid
+        uri = 'http://musicbrainz.org/' + Utils.entity_type_to_string(entity) + '/' + uuid
         mbid = Model::MBID.parse uuid, entity
         assert_equal uri, mbid.to_s
         mbid = Model::MBID.parse uri
@@ -88,10 +89,10 @@ class TestMBID < Test::Unit::TestCase
     @valid_entities.each{|entity|
       @valid_uuids.each{|uuid|
         mbid = Model::MBID.parse uuid, entity
-        assert_equal entity.to_sym, mbid.entity
+        assert_equal Utils.entity_type_to_symbol(entity), mbid.entity
         assert_equal uuid, mbid.uuid
-        mbid = Model::MBID.parse 'http://musicbrainz.org/' + entity.to_s + '/' + uuid
-        assert_equal entity.to_sym, mbid.entity
+        mbid = Model::MBID.parse 'http://musicbrainz.org/' + Utils.entity_type_to_string(entity) + '/' + uuid
+        assert_equal Utils.entity_type_to_symbol(entity), mbid.entity
         assert_equal uuid, mbid.uuid
       }
     }

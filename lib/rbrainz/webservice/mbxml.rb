@@ -1,4 +1,5 @@
-# $Id$
+# -*- coding: utf-8 -*-
+# $Id: mbxml.rb 321 2011-04-19 22:04:41Z phw $
 #
 # Author::    Philipp Wolfer (mailto:phw@rubyforge.org)
 # Copyright:: Copyright (c) 2007, Nigel Graham, Philipp Wolfer
@@ -22,7 +23,7 @@ module MusicBrainz
     class MBXML
     
       # Exception to be raised if a parse error occurs in MBXML.
-      class ParseError < Exception
+      class ParseError < ::Exception
       end
     
       # Create a new MBXML instance to parse a MusicBrainz metadata document.
@@ -47,10 +48,11 @@ module MusicBrainz
         # Already loaded artists, releases, tracks and labels will get cached
         # in these variables to link to them if they occure multiple times
         # inside the same document.
-        @artists  = Hash.new
-        @releases = Hash.new
-        @tracks   = Hash.new
-        @labels   = Hash.new
+        @artists        = Hash.new
+        @release_groups = Hash.new
+        @releases       = Hash.new
+        @tracks         = Hash.new
+        @labels         = Hash.new
       end
       
       # Read the XML string and create an entity model for the given entity
@@ -61,10 +63,10 @@ module MusicBrainz
         # Search for the first occuring node of type entity which is a child node
         # of the metadata element.
         entity = @document.elements["//[local-name()='metadata' and namespace-uri()='%s']/%s[1]" %
-                 [Model::NS_MMD_1, entity_type]]
+                 [Model::NS_MMD_1, Utils.entity_type_to_string(entity_type)]]
         
         unless entity.nil? or entity.is_a? REXML::Text
-          create_method = method('create_' + entity.name)
+          create_method = method('create_' + entity_type.to_s)
           create_method.call(entity) if create_method
         else
           return nil
@@ -83,7 +85,7 @@ module MusicBrainz
         # of the metadata element.
         entity_list = @document.elements[
           "//[local-name()='metadata' and namespace-uri()='%s']/[local-name()='%s-list' and namespace-uri()='%s'][1]" %
-            [Model::NS_MMD_1, entity_type, ns]]
+            [Model::NS_MMD_1, Utils.entity_type_to_string(entity_type), ns]]
         
         unless entity_list.nil? or entity_list.is_a? REXML::Text
           collection = Model::ScoredCollection.new(entity_list.attributes['count'],
@@ -121,7 +123,11 @@ module MusicBrainz
         end
         
         # Read all defined data fields
-        artist.id = node.attributes['id']
+        read_mbid(node, artist)
+        read_relationships(node, artist)
+        read_ratings(node, artist)
+        read_tag_list(node.elements['tag-list'], artist.tags)
+        read_user_tag_list(node.elements['user-tag-list'], artist.user_tags)
         if node.attributes['type']
           artist.type = Utils.add_namespace(node.attributes['type'])
         end
@@ -142,20 +148,46 @@ module MusicBrainz
         read_release_list(node.elements['release-list'], artist.releases) {|release|
           release.artist = artist unless release.artist
         }
-        
-        # Read the relation list
-        if node.elements['relation-list']
-          node.elements.each('relation-list') {|relation_node|
-            read_relation_list(relation_node) {|relation|
-              artist.add_relation relation
-            }
-          }
+
+        # Read the release group list
+        read_release_group_list(node.elements['release-group-list'], artist.release_groups) {|release_group|
+          release_group.artist = artist unless release_group.artist
+        }
+
+        return artist
+      end
+      
+      # Iterate over a list of release groups and add them to the target collection.
+      # 
+      # The node must be of the type <em>release-group-list</em>.
+      def read_release_group_list(list_node, target_collection, read_scores=false)
+        read_list(list_node, target_collection, 'release-group', read_scores) do |a|
+          yield a if block_given?
+        end
+      end
+      
+      # Create a +ReleaseGroup+ object from the given release-group node.
+      def create_release_group(node)
+        if node.attributes['id'] and @release_groups[node.attributes['id']]
+          release_group = @release_groups[node.attributes['id']]
+        else
+          release_group = @factory.new_release_group
+          @release_groups[node.attributes['id']] = release_group
         end
         
-        # Read the tag list
-        read_tag_list(node.elements['tag-list'], artist.tags)
+        # Read all defined data fields
+        read_mbid(node, release_group)
+        release_group.title  = node.elements['title'].text if node.elements['title']
+        release_group.artist = create_artist(node.elements['artist']) if node.elements['artist']
         
-        return artist
+        read_types(node, release_group.types)
+        
+        # Read the release list
+        read_release_list(node.elements['release-list'], release_group.releases) {|release|
+          release.artist = release_group.artist unless release.artist
+        }
+        
+        return release_group
       end
       
       # Iterate over a list of releases and add them to the target collection.
@@ -179,15 +211,17 @@ module MusicBrainz
         end
         
         # Read all defined data fields
-        release.id     = node.attributes['id']
+        read_mbid(node, release)
+        read_relationships(node, release)
+        read_ratings(node, release)
+        read_tag_list(node.elements['tag-list'], release.tags)
+        read_user_tag_list(node.elements['user-tag-list'], release.user_tags)
         release.title  = node.elements['title'].text if node.elements['title']
         release.asin   = node.elements['asin'].text if node.elements['asin']
         release.artist = create_artist(node.elements['artist']) if node.elements['artist']
+        release.release_group = create_release_group(node.elements['release-group']) if node.elements['release-group']
         
-        # Read the types
-        node.attributes['type'].split(' ').each {|type|
-          release.types << Utils.add_namespace(type)
-        } if node.attributes['type']
+        read_types(node, release.types)
         
         # Read the text representation information.
         if text_representation = node.elements['text-representation']
@@ -207,18 +241,6 @@ module MusicBrainz
         # Read the disc list
         read_disc_list(node.elements['disc-list'], release.discs)
                 
-        # Read the relation list
-        if node.elements['relation-list']
-          node.elements.each('relation-list') {|relation_node|
-            read_relation_list(relation_node) {|relation|
-              release.add_relation relation
-            }
-          }
-        end
-        
-        # Read the tag list
-        read_tag_list(node.elements['tag-list'], release.tags)
-        
         return release
       end
       
@@ -241,7 +263,11 @@ module MusicBrainz
         end
         
         # Read all defined data fields
-        track.id       = node.attributes['id']
+        read_mbid(node, track)
+        read_relationships(node, track)
+        read_ratings(node, track)
+        read_tag_list(node.elements['tag-list'], track.tags)
+        read_user_tag_list(node.elements['user-tag-list'], track.user_tags)
         track.title    = node.elements['title'].text if node.elements['title']
         track.duration = node.elements['duration'].text.to_i if node.elements['duration']
         track.artist   = create_artist(node.elements['artist']) if node.elements['artist']
@@ -251,20 +277,9 @@ module MusicBrainz
           release.tracks << track
         }
         
-        # Read the PUID list
+        # Read the PUID and ISRC lists
         read_puid_list(node.elements['puid-list'], track.puids)
-        
-        # Read the relation list
-        if node.elements['relation-list']
-          node.elements.each('relation-list') {|relation_node|
-            read_relation_list(relation_node) {|relation|
-              track.add_relation relation
-            }
-          }
-        end
-        
-        # Read the tag list
-        read_tag_list(node.elements['tag-list'], track.tags)
+        read_isrc_list(node.elements['isrc-list'], track.isrcs)
         
         return track
       end
@@ -288,7 +303,11 @@ module MusicBrainz
         end
         
         # Read all defined data fields
-        label.id = node.attributes['id']
+        read_mbid(node, label)
+        read_relationships(node, label)
+        read_ratings(node, label)
+        read_tag_list(node.elements['tag-list'], label.tags)
+        read_user_tag_list(node.elements['user-tag-list'], label.user_tags)
         if node.attributes['type']
           label.type = Utils.add_namespace(node.attributes['type'])
         end
@@ -310,18 +329,6 @@ module MusicBrainz
         # Read the release list
         read_release_list(node.elements['release-list'], label.releases)
       
-        # Read the relation list
-        if node.elements['relation-list']
-          node.elements.each('relation-list') {|relation_node|
-            read_relation_list(relation_node) {|relation|
-              label.add_relation relation
-            }
-          }
-        end
-        
-        # Read the tag list
-        read_tag_list(node.elements['tag-list'], label.tags)
-        
         return label  
       end
       
@@ -354,11 +361,28 @@ module MusicBrainz
         end
       end
       
-      # Create an +Tag+ object from the given tag node.
+      # Iterate over a list of tags and add them to the target collection.
+      # 
+      # The node must be of the type <em>tag-list</em>.
+      def read_user_tag_list(list_node, target_collection, read_scores=false)
+        read_list(list_node, target_collection, 'user-tag', read_scores) do |a|
+          yield a if block_given?
+        end
+      end
+      
+      # Create a +Tag+ object from the given tag node.
       def create_tag(node)
         tag = @factory.new_tag
         tag.text = node.text
         tag.count = node.attributes['count'].to_i if node.attributes['count']
+        return tag
+      end
+
+      # Create a +Tag+ object from the given user-tag node.
+      def create_user_tag(node)
+        tag = @factory.new_tag
+        tag.text = node.text
+        tag.count = 1
         return tag
       end
       
@@ -398,6 +422,20 @@ module MusicBrainz
       # Create a PUID
       def create_puid(node)
         return node.attributes['id']
+      end
+      
+      # Iterate over a list of ISRCs and add them to the target collection.
+      # 
+      # The node must be of the type <em>isrc-list</em>.
+      def read_isrc_list(list_node, target_collection)
+        read_list(list_node, target_collection, 'isrc') do |a|
+          yield a if block_given?
+        end
+      end
+      
+      # Create an ISRC
+      def create_isrc(node)
+        return Model::ISRC.parse(node.attributes['id'])
       end
       
       # Iterate over a list of discs and add them to the target collection.
@@ -510,6 +548,51 @@ module MusicBrainz
         return user_model
       end
       
+      # Read attributes common to all entities
+      def read_mbid(node, entity)
+        entity.id = node.attributes['id']
+      end
+      
+      # Read the relation list
+      def read_relationships(node, entity)
+        if node.elements['relation-list']
+          node.elements.each('relation-list') {|relation_node|
+            read_relation_list(relation_node) {|relation|
+              entity.add_relation relation
+            }
+          }
+        end
+      end
+      
+      # Read the type attribute
+      def read_types(node, target_collection)
+        node.attributes['type'].split(' ').each {|type|
+          target_collection << Utils.add_namespace(type)
+        } if node.attributes['type']
+      end
+      
+      # Read the ratings
+      def read_ratings(node, entity)
+        if node.elements['rating']
+          entity.rating = create_rating(node.elements['rating'])
+        end
+        
+        if node.elements['user-rating']
+          entity.user_rating = create_user_rating(node.elements['user-rating'])
+        end
+      end
+      
+      # Create a +Rating+ object from the given rating or user-rating node.
+      def create_rating(node)
+        rating = @factory.new_rating
+        rating.value = node.text.to_f
+        if node.attributes['votes-count']
+          rating.count = node.attributes['votes-count'].to_i
+        end
+        return rating
+      end
+      alias :create_user_rating create_rating
+      
       # Helper method that reads a list of a special node type.
       # There must be a method create_{child_name} which returns an
       # instance of the corresponding model.
@@ -518,7 +601,7 @@ module MusicBrainz
           target_collection.offset = list_node.attributes['offset'].to_i
           target_collection.count  = list_node.attributes['count'].to_i
           MBXML.each_element(list_node, child_name, ns) do |child|
-            model = method('create_' + child_name).call(child)
+            model = method('create_' + child_name.sub('-', '_')).call(child)
             if read_scores
               score = child.attributes['ext:score'].to_i
               entry = Model::ScoredCollection::Entry.new(model, score)

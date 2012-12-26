@@ -1,4 +1,5 @@
-# $Id$
+# -*- coding: utf-8 -*-
+# $Id: mbid.rb 288 2009-08-04 12:50:09Z phw $
 #
 # Author::    Philipp Wolfer (mailto:phw@rubyforge.org)
 # Copyright:: Copyright (c) 2007, Nigel Graham, Philipp Wolfer
@@ -44,8 +45,8 @@ module MusicBrainz
     # See:: http://musicbrainz.org/doc/MusicBrainzIdentifier
     class MBID
     
-      # The entity type (<tt>:artist</tt>, <tt>:label</tt>, <tt>:release</tt>,
-      # <tt>:track</tt>) this MBID references.
+      # The entity type (<tt>:artist</tt>, <tt>:label</tt>, <tt>:release_group</tt>,
+      # <tt>:release</tt>, <tt>:track</tt>) this MBID references.
       attr_reader :entity
       
       # The UUID of the referenced entity.
@@ -53,7 +54,7 @@ module MusicBrainz
       
       module PATTERN #:nodoc:
         UUID = '([a-fA-F0-9]{8}(:?-[a-fA-F0-9]{4}){3}-[a-fA-F0-9]{12})'
-        ENTITY_TYPE = '(artist|release|track|label)'
+        ENTITY_TYPE = '(artist|release-group|release|track|label)'
         ENTITY_URI = "http://musicbrainz\\.org/#{ENTITY_TYPE}/#{UUID}"
       end
       
@@ -74,6 +75,9 @@ module MusicBrainz
       # 
       # See:: new
       # See:: String#to_mbid, URI::HTTP#to_mbid
+      # 
+      # Raises:: UnknownEntityError, EntityTypeNotMatchingError,
+      #          InvalidMBIDError
       def self.parse(str, entity_type=nil)
         if str.respond_to? :to_mbid
           str.to_mbid(entity_type)
@@ -86,7 +90,8 @@ module MusicBrainz
       # 
       # _str_ can be either a complete identifier or just the UUID part of it.
       # In the latter case the entity type (<tt>:artist</tt>, <tt>:label</tt>,
-      # <tt>:release</tt> or <tt>:track</tt>) has to be specified as well.
+      # <tt>:release_group</tt>, <tt>:release</tt> or <tt>:track</tt>) has to be
+      # specified as well.
       # 
       # Examples:
       #  require 'rbrainz'
@@ -98,13 +103,13 @@ module MusicBrainz
       #          InvalidMBIDError
       def initialize(str, entity_type=nil)
         str = str.to_s if str.respond_to? :to_s
-        if entity_type && !(entity_type.to_s =~ ENTITY_TYPE_REGEXP )
+        unless is_valid_entity_type_or_nil(entity_type)
           raise UnknownEntityError, entity_type
         end
-        entity_type = entity_type.to_sym if entity_type.respond_to? :to_sym
+        entity_type = Utils.entity_type_to_symbol(entity_type)
         
         if str =~ ENTITY_URI_REGEXP
-          @entity = $1.to_sym
+          @entity = Utils.entity_type_to_symbol($1)
           @uuid = $2.downcase
           unless entity_type.nil? || @entity == entity_type
             raise EntityTypeNotMatchingError, "#{@entity}, #{entity_type}"
@@ -135,7 +140,7 @@ module MusicBrainz
       
       # Returns the string representation of the MBID (that is the complete URI).
       def to_s
-        ENTITY_URI % [entity.to_s, uuid]
+        ENTITY_URI % [Utils.entity_type_to_string(entity), uuid]
       end
       
       # Compares this MBID with another one.
@@ -145,6 +150,12 @@ module MusicBrainz
       def ==(other)
         other = other.to_mbid if other.respond_to? :to_mbid
         self.entity == other.entity and self.uuid == other.uuid
+      end
+      
+      private
+      
+      def is_valid_entity_type_or_nil(entity_type)
+        return entity_type.nil? || Utils.entity_type_to_string(entity_type) =~ ENTITY_TYPE_REGEXP
       end
       
     end

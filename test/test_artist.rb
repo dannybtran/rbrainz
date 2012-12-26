@@ -1,11 +1,15 @@
-# $Id$
+# -*- coding: utf-8 -*-
+# $Id: test_artist.rb 258 2009-05-17 17:43:58Z phw $
 #
 # Author::    Philipp Wolfer (mailto:phw@rubyforge.org)
-# Copyright:: Copyright (c) 2007, Philipp Wolfer
+# Copyright:: Copyright (c) 2007-2009, Philipp Wolfer
 # License::   RBrainz is free software distributed under a BSD style license.
 #             See LICENSE[file:../LICENSE.html] for permissions.
 
 require 'test_entity'
+require 'test_rateable'
+require 'test_relateable'
+require 'test_taggable'
 
 # Unit test for the Artist model.
 class TestArtist < Test::Unit::TestCase
@@ -13,6 +17,7 @@ class TestArtist < Test::Unit::TestCase
   def setup
     @tested_class = Model::Artist
     @invalid_entity_types = [:release, :track, :label]
+    @release_groups = [Model::ReleaseGroup.new, Model::ReleaseGroup.new]
     @releases = [Model::Release.new, Model::Release.new]
     @aliases = [Model::Alias.new, Model::Alias.new]
   end
@@ -22,6 +27,9 @@ class TestArtist < Test::Unit::TestCase
   
   # Include the tests for Entity
   include TestEntity
+  include TestRateable
+  include TestRelateable
+  include TestTaggable
 
   def test_new_artist
     artist = nil
@@ -107,6 +115,20 @@ class TestArtist < Test::Unit::TestCase
     assert_equal Model::IncompleteDate.new('1988-04-20'), artist.end_date
   end
 
+  def test_add_and_remove_release_groups
+    artist = Model::Artist.new
+    assert_equal 0, artist.release_groups.size
+    assert_nothing_raised {artist.release_groups << @release_groups[0]}
+    assert_equal 1, artist.release_groups.size
+    assert_nothing_raised {artist.release_groups << @release_groups[1]}
+    assert_equal 2, artist.release_groups.size
+    
+    assert_nothing_raised {artist.release_groups.delete @release_groups[1]}
+    assert_equal 1, artist.release_groups.size
+    assert_nothing_raised {artist.release_groups.delete @release_groups[0]}
+    assert_equal 0, artist.release_groups.size
+  end
+  
   # Many releases can be added
   def test_add_and_remove_releases
     artist = Model::Artist.new

@@ -1,4 +1,5 @@
-# $Id$
+# -*- coding: utf-8 -*-
+# $Id: filter.rb 264 2009-05-24 22:15:19Z phw $
 #
 # Author::    Philipp Wolfer (mailto:phw@rubyforge.org)
 # Copyright:: Copyright (c) 2007, Nigel Graham, Philipp Wolfer
@@ -70,6 +71,50 @@ module MusicBrainz
     
     end
     
+    # A filter for the release group collection.
+    class ReleaseGroupFilter < AbstractFilter
+    
+      # The parameter _filter_ is a hash with filter options. At least one
+      # filter despite <tt>:limit</tt> and <tt>:offset</tt> must be specified.
+      # 
+      # Available filter options:
+      # [:title]     Fetch a list of release groups with a matching title.
+      # [:artist]    The returned release groups should match the given artist name.
+      # [:artistid]  The returned releasegroups should match the given artist ID
+      #              (36 character ASCII representation). If this is given,
+      #              the artist parameter is ignored.
+      # [:releasetypes] The returned release groups must match all of the given
+      #                 release types. This is either an array of release types
+      #                 as defined in Model::ReleaseGroup or a string of space separated
+      #                 values like Official, Bootleg, Album, Compilation etc.
+      # [:limit]     The maximum number of release groups returned. Defaults
+      #              to 25, the maximum allowed value is 100. 
+      # [:offset]    Return search results starting at a given offset. Used
+      #              for paging through more than one page of results.
+      # [:query]     A Lucene search query. The query parameter is a search
+      #              string which will be passed to the underlying Lucene search
+      #              engine. It must follow the syntax described in
+      #              http://musicbrainz.org/doc/TextSearchSyntax.
+      def initialize(filter)
+        Utils.check_options filter, 
+          :limit, :offset, :query, :title, :artist, :artistid, :releasetypes
+        super(filter)
+        @filter[:title]        = filter[:title]     if filter[:title]
+        @filter[:artist]       = filter[:artist]    if filter[:artist]
+        @filter[:artistid]     = filter[:artistid]  if filter[:artistid]
+        
+        if releasetypes = filter[:releasetypes]
+          if releasetypes.respond_to?(:to_a)
+            releasetypes = releasetypes.to_a.map do |type|
+              Utils.remove_namespace(type)
+            end.join(' ')
+          end
+          @filter[:releasetypes] = releasetypes
+        end
+      end
+    
+    end
+    
     # A filter for the release collection.
     class ReleaseFilter < AbstractFilter
     
@@ -92,7 +137,9 @@ module MusicBrainz
       # [:asin]      The Amazon ASIN.
       # [:lang]      The language for this release.
       # [:script]    The script used in this release.
-      # [:limit]     The maximum number of tracks returned. Defaults
+      # [:cdstubs]   Flag which indicates whether to include CD stubs or not (boolean).
+      #              Defaults to false.
+      # [:limit]     The maximum number of releases returned. Defaults
       #              to 25, the maximum allowed value is 100. 
       # [:offset]    Return search results starting at a given offset. Used
       #              for paging through more than one page of results.
@@ -103,7 +150,7 @@ module MusicBrainz
       def initialize(filter)
         Utils.check_options filter, 
           :limit, :offset, :query, :title, :discid, :artist, :artistid, 
-          :releasetypes, :count, :date, :asin, :lang, :script
+          :releasetypes, :count, :date, :asin, :lang, :script, :cdstubs
         super(filter)
         @filter[:title]        = filter[:title]     if filter[:title]
         @filter[:discid]       = filter[:discid]    if filter[:discid]
@@ -114,6 +161,8 @@ module MusicBrainz
         @filter[:asin]         = filter[:asin]      if filter[:asin]
         @filter[:lang]         = filter[:lang]      if filter[:lang]
         @filter[:script]       = filter[:script]    if filter[:script]
+        
+        @filter[:cdstubs] = filter[:cdstubs] ? 'yes' : 'no'
         
         if releasetypes = filter[:releasetypes]
           if releasetypes.respond_to?(:to_a)

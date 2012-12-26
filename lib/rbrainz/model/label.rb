@@ -1,4 +1,5 @@
-# $Id$
+# -*- coding: utf-8 -*-
+# $Id: label.rb 254 2009-05-13 20:04:36Z phw $
 #
 # Author::    Philipp Wolfer (mailto:phw@rubyforge.org)
 # Copyright:: Copyright (c) 2007, Nigel Graham, Philipp Wolfer
@@ -26,6 +27,8 @@ module MusicBrainz
     # See:: http://musicbrainz.org/doc/Label.
     class Label < Individual
     
+      include Taggable
+      
       # Used if the type of the label is unknown.
       TYPE_UNKNOWN             = NS_MMD_1 + 'Unknown'
       # Companies mainly distributing other labels production,

@@ -1,4 +1,5 @@
-# $Id$
+# -*- coding: utf-8 -*-
+# $Id: mock_webservice.rb 273 2009-05-24 22:29:04Z phw $
 #
 # Author::    Philipp Wolfer (mailto:phw@rubyforge.org)
 # Copyright:: Copyright (c) 2007, Nigel Graham, Philipp Wolfer
@@ -25,6 +26,12 @@ class MockWebservice < MusicBrainz::Webservice::IWebservice
         end
       else
         file = 'valid/artist/search_result_1.xml'
+      end
+    when :release_group
+      if options[:id]
+        file = 'valid/release-group/The_Cure_1.xml'
+      else
+        file = 'valid/release-group/search_result_1.xml'
       end
     when :release
       if options[:id]

@@ -1,4 +1,5 @@
-# $Id$
+# -*- coding: utf-8 -*-
+# $Id: test_factory.rb 273 2009-05-24 22:29:04Z phw $
 #
 # Author::    Philipp Wolfer (mailto:phw@rubyforge.org)
 # Copyright:: Copyright (c) 2007, Nigel Graham, Philipp Wolfer
@@ -12,6 +13,9 @@ class MyArtist < Model::Artist
 end
 
 class MyLabel < Model::Label
+end
+
+class MyReleaseGroup < Model::ReleaseGroup
 end
 
 class MyRelease < Model::Release
@@ -32,6 +36,10 @@ class MyFactory < Model::DefaultFactory
 
   def new_label
     MyLabel.new
+  end
+
+  def new_release_group
+    MyReleaseGroup.new
   end
 
   def new_release

@@ -1,4 +1,5 @@
-# $Id$
+# -*- coding: utf-8 -*-
+# $Id: countrynames.rb 259 2009-05-17 17:44:00Z phw $
 #
 # Author::    Philipp Wolfer (mailto:phw@rubyforge.org)
 # Copyright:: Copyright (c) 2007, Nigel Graham, Philipp Wolfer
@@ -242,7 +243,9 @@ module MusicBrainz
     	'MZ' => 'Mozambique',
     	'BA' => 'Bosnia and Herzegovina',
     	'CD' => 'Congo, The Democratic Republic of the',
-    	'CS' => 'Serbia and Montenegro',
+    	'CS' => 'Serbia and Montenegro (historical, 2003-2006)',
+    	'RS' => 'Serbia',
+    	'ME' => 'Montenegro',
     	'HR' => 'Croatia',
     	'KP' => 'Korea (North), Democratic People\'s Republic of',
     	'KR' => 'Korea (South), Republic of',

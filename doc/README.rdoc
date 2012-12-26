@@ -9,8 +9,8 @@ used to PythonMusicBrainz2 should already know most of RBrainz' interface.
 However, RBrainz differs from PythonMusicBrainz2 wherever it makes the
 library more Ruby like or easier to use.
 
-RBrainz supports the MusicBrainz XML Metadata Version 1.2, including support
-for labels and extended release events.
+RBrainz supports the MusicBrainz XML Metadata Version 1.4, including support
+for labels, extended release events, release groups and ratings.
 
 == Installation
 === Installing with RubyGems
@@ -92,12 +92,12 @@ If you find bugs or if you have any feature requests please use the
 RBrainz bug tracker[http://rubyforge.org/tracker/?group_id=3677]. 
 
 == Authors
-* Nigel Graham
 * Philipp Wolfer
+* Nigel Graham
 
 == License
-RBrainz is Copyright (c) 2007 Philipp Wolfer and Nigel Graham.
+RBrainz is Copyright (c) 2007-2011 Philipp Wolfer and 2007 Nigel Graham.
 It is free softare distributed under a BSD style license. See
 LICENSE[link:files/LICENSE.html] for details.
 
-$Id$
+$Id: README.rdoc 322 2011-04-28 20:16:42Z phw $

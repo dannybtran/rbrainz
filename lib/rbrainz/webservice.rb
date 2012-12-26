@@ -1,4 +1,5 @@
-# $Id$
+# -*- coding: utf-8 -*-
+# $Id: webservice.rb 254 2009-05-13 20:04:36Z phw $
 #
 # Author::    Philipp Wolfer (mailto:phw@rubyforge.org)
 # Copyright:: Copyright (c) 2007, Nigel Graham, Philipp Wolfer
@@ -20,20 +21,24 @@ module MusicBrainz # :nodoc:
   # 
   # See:: Model
   module Webservice
+    
+    # Base exception class for all webservice errors.
+    class WebserviceError < ::Exception
+    end
 
     # Connecting to the web service failed.
     #
     # This exception is raised if the connection to the server can not be
     # established due to networking problems (e.g. wrong port number or
     # server down).
-    class ConnectionError < Exception
+    class ConnectionError < WebserviceError
     end
     
     # An invalid request was made.
     # 
     # This exception is raised if the client made an invalid request. That could
     # be syntactically invalid identifiers or unknown or invalid parameter values.
-    class RequestError < Exception
+    class RequestError < WebserviceError
     end
     
     # Client requested a resource which requires authentication via HTTP
@@ -41,11 +46,11 @@ module MusicBrainz # :nodoc:
     # 
     # If sent even though user name and password were given: user name and/or
     # password are incorrect. 
-    class AuthenticationError < Exception
+    class AuthenticationError < WebserviceError
     end
     
     # The requested resource doesn't exist.
-    class ResourceNotFoundError < Exception
+    class ResourceNotFoundError < WebserviceError
     end
 
     # The returned resource was invalid.
@@ -53,7 +58,7 @@ module MusicBrainz # :nodoc:
     # This may be due to a malformed XML document or if the requested data
     # wasn't part of the response. It can only occur in case of bugs in the web
     # service itself.
-    class ResponseError < Exception
+    class ResponseError < WebserviceError
     end
     
   end 

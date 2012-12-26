@@ -1,4 +1,5 @@
-# $Id$
+# -*- coding: utf-8 -*-
+# $Id: release_event.rb 295 2009-08-25 14:32:31Z phw $
 #
 # Author::    Philipp Wolfer (mailto:phw@rubyforge.org)
 # Copyright:: Copyright (c) 2007, Nigel Graham, Philipp Wolfer
@@ -39,6 +40,7 @@ module MusicBrainz
       FORMAT_DIGITAL      = NS_MMD_1 + 'Digital'
       FORMAT_WAX_CYLINDER = NS_MMD_1 + 'WaxCylinder'
       FORMAT_PIANO_ROLL   = NS_MMD_1 + 'PianoRoll'
+      FORMAT_DCC          = NS_MMD_1 + 'DCC'
       FORMAT_OTHER        = NS_MMD_1 + 'Other'
     
       # The country in which an album was released.

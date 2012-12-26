@@ -1,4 +1,5 @@
-# $Id$
+# -*- coding: utf-8 -*-
+# $Id: test_mbxml.rb 321 2011-04-19 22:04:41Z phw $
 #
 # Author::    Philipp Wolfer (mailto:phw@rubyforge.org)
 # Copyright:: Copyright (c) 2007, Nigel Graham, Philipp Wolfer
@@ -81,6 +82,8 @@ class TestMBXML < Test::Unit::TestCase
     assert_equal '1840-05-07', artist.begin_date.to_s
     assert_equal '1893-11-06', artist.end_date.to_s
     assert_equal 80, artist.aliases.size
+    assert artist.rating.empty?
+    assert artist.user_rating.empty?
   end
   
   def test_artist_tchaikovsky_2
@@ -98,7 +101,15 @@ class TestMBXML < Test::Unit::TestCase
     assert_equal 'romantic era', artist.tags[2].text
     assert_equal 40, artist.tags[2].count
     assert_equal 'composer', artist.tags[3].text
+    assert_equal 2, artist.user_tags.size
+    assert_equal 'classical', artist.user_tags[0].text
+    assert_equal 'russian', artist.user_tags[1].text
     assert_equal 120, artist.tags[3].count
+    assert_equal false, artist.rating.empty?
+    assert_equal 4.5, artist.rating.value
+    assert_equal 10, artist.rating.count
+    assert_equal false, artist.user_rating.empty?
+    assert_equal 3, artist.user_rating.value
   end
   
   def test_artist_tori_amos_1
@@ -124,13 +135,20 @@ class TestMBXML < Test::Unit::TestCase
     assert_equal 3, artist.releases.size
     assert_equal 'a7ccb022-f437-4492-8eee-8f85d85cdb96', artist.releases[0].id.uuid
     assert_equal artist, artist.releases[0].artist
+    assert_equal 'a69a1574-dfe3-3e2a-b499-d26d5e916041', artist.releases[0].release_group.id.uuid
     assert_equal 3, artist.releases[0].discs.count
     assert_equal '9cbf7040-dbdc-403c-940f-7562d9712514', artist.releases[1].id.uuid
     assert_equal artist, artist.releases[1].artist
+    assert_equal '1fd43909-8056-3805-b2f9-c663ce7e71e6', artist.releases[1].release_group.id.uuid
     assert_equal 2, artist.releases[1].discs.count
     assert_equal '290e10c5-7efc-4f60-ba2c-0dfc0208fbf5', artist.releases[2].id.uuid
     assert_equal artist, artist.releases[2].artist
+    assert_equal 'ef2b891f-ca73-3e14-b38b-a68699dab8c4', artist.releases[2].release_group.id.uuid
     assert_equal 4, artist.releases[2].discs.count
+    assert_equal 3, artist.release_groups.size
+    assert_equal artist.release_groups[0], artist.releases[2].release_group
+    assert_equal artist.release_groups[1], artist.releases[1].release_group
+    assert_equal artist.release_groups[2], artist.releases[0].release_group
   end
   
   def test_artist_tori_amos_3
@@ -194,6 +212,53 @@ class TestMBXML < Test::Unit::TestCase
     assert artist.releases[0].types.include?(Model::Release::TYPE_OFFICIAL)
   end
   
+  def test_release_group_search
+    mbxml = Webservice::MBXML.new File.new(DATA_PATH + 'release-group/search_result_1.xml')
+    assert_equal nil, mbxml.get_entity(:artist)
+    assert_equal nil, mbxml.get_entity(:release)
+    assert_equal nil, mbxml.get_entity(:track)
+    assert_equal nil, mbxml.get_entity(:label)
+    assert_equal nil, mbxml.get_entity(:release_group)
+    
+    release_group_list = mbxml.get_entity_list(:release_group)
+    assert_equal 0, release_group_list.offset
+    assert_equal 3, release_group_list.count
+    
+    assert_equal 3, release_group_list.size, release_group_list.inspect
+    assert_equal '963eac15-e3da-3a92-aa5c-2ec23bfb6ec2', release_group_list[0].entity.id.uuid
+    assert release_group_list[0].entity.types.include?(Model::ReleaseGroup::TYPE_ALBUM)
+    assert_equal 'Signal Morning', release_group_list[0].entity.title
+    assert_equal '2dea8a55-623b-42bb-bda3-9fb784018b40', release_group_list[0].entity.artist.id.uuid
+    assert_equal 'Circulatory System', release_group_list[0].entity.artist.name
+    assert_equal 100, release_group_list[0].score
+    assert_equal 98, release_group_list[1].score
+  end
+  
+  def test_release_group_the_cure_1
+    mbxml = Webservice::MBXML.new File.new(DATA_PATH + 'release-group/The_Cure_1.xml')
+    release_group = mbxml.get_entity(:release_group)
+    
+    assert_equal 'c6a62b78-70f7-44f7-b159-064f6b7ba03a', release_group.id.uuid
+    assert_equal 1, release_group.types.size
+    assert release_group.types.include?(Model::ReleaseGroup::TYPE_ALBUM)
+    assert_equal 'The Cure', release_group.title
+    
+    assert_equal 4, release_group.releases.size
+    assert_equal 'd984e1a3-7281-46bb-ad8b-1478a00f2fbf', release_group.releases[0].id.uuid
+    assert_equal 'The Cure', release_group.releases[0].title
+    assert_equal 'ENG', release_group.releases[0].text_language
+    assert_equal 'Latn', release_group.releases[0].text_script
+    assert release_group.releases[0].types.include?(Model::Release::TYPE_ALBUM)
+    assert release_group.releases[0].types.include?(Model::Release::TYPE_OFFICIAL)
+    assert_equal 'B0002CHGZI', release_group.releases[0].asin
+    assert_equal 'c100a398-3132-48a8-a5fc-c3e908ac17dc', release_group.releases[1].id.uuid
+    assert_equal '24bec892-b21d-47d8-a288-dc6450152574', release_group.releases[2].id.uuid
+    assert_equal '61a4ec51-fa34-4757-85d7-83231776ed14', release_group.releases[3].id.uuid
+    
+    assert_equal '69ee3720-a7cb-4402-b48d-a02c366f2bcf', release_group.artist.id.uuid
+    assert_equal 'The Cure', release_group.artist.name
+  end
+  
   def test_release_search
     mbxml = Webservice::MBXML.new File.new(DATA_PATH + 'release/search_result_1.xml')
     assert_equal nil, mbxml.get_entity(:artist)
@@ -247,6 +312,8 @@ class TestMBXML < Test::Unit::TestCase
     assert_equal Model::NS_REL_1 + 'AmazonAsin', url_rels[1].type
     assert_equal Model::Relation::DIR_BOTH, url_rels[1].direction
     assert_equal 'http://www.amazon.com/gp/product/B0000024SI', url_rels[1].target
+    assert release.rating.empty?
+    assert release.user_rating.empty?
   end
   
   def test_release_highway_61_revisited_2
@@ -266,6 +333,14 @@ class TestMBXML < Test::Unit::TestCase
     assert_equal 40, release.tags[2].count
     assert_equal 'dylan', release.tags[3].text
     assert_equal 4, release.tags[3].count
+    assert_equal 2, release.user_tags.size
+    assert_equal 'rock', release.user_tags[0].text
+    assert_equal 'foo', release.user_tags[1].text
+    assert_equal false, release.rating.empty?
+    assert_equal 4.5, release.rating.value
+    assert_equal 10, release.rating.count
+    assert_equal false, release.user_rating.empty?
+    assert_equal 3, release.user_rating.value
   end
   
   def test_release_little_earthquakes_1
@@ -363,6 +438,9 @@ class TestMBXML < Test::Unit::TestCase
     assert_equal 1, release.tracks.size
     assert_equal '0a984e3b-e38a-4b86-80be-f3a3eb1114ca', release.tracks[0].id.uuid
     assert_equal 'God', release.tracks[0].title
+    assert_equal 'ef2b891f-ca73-3e14-b38b-a68699dab8c4', release.release_group.id.uuid
+    assert release.release_group.types.include?(Model::ReleaseGroup::TYPE_ALBUM)
+    assert_equal 'Under the Pink', release.release_group.title
   end
   
   def test_release_under_the_pink_3
@@ -414,6 +492,7 @@ class TestMBXML < Test::Unit::TestCase
     assert_equal 'd6118046-407d-4e06-a1ba-49c399a4c42f', track.id.uuid
     assert_equal 'Silent All These Years', track.title
     assert_equal 253466, track.duration
+    assert track.isrcs.empty?
   end
   
   def test_track_silent_all_these_years_2
@@ -431,6 +510,7 @@ class TestMBXML < Test::Unit::TestCase
     assert_equal Model::Relation::DIR_BACKWARD, track_rels[0].direction
     assert track_rels[0].target.is_a?(Model::Track)
     assert_equal '5bcd4eaa-fae7-465f-9f03-d005b959ed02', track_rels[0].target.artist.id.uuid
+    assert track.isrcs.empty?
   end
   
   def test_track_silent_all_these_years_3
@@ -443,6 +523,7 @@ class TestMBXML < Test::Unit::TestCase
     assert_equal 7, track.puids.size
     assert_equal 'c2a2cee5-a8ca-4f89-a092-c3e1e65ab7e6', track.puids[0]
     assert_equal '42ab76ea-5d42-4259-85d7-e7f2c69e4485', track.puids[6]
+    assert track.isrcs.empty?
   end
   
   def test_track_silent_all_these_years_4
@@ -458,6 +539,8 @@ class TestMBXML < Test::Unit::TestCase
     assert_equal 7, track.puids.size
     assert_equal 'c2a2cee5-a8ca-4f89-a092-c3e1e65ab7e6', track.puids[0]
     assert_equal '42ab76ea-5d42-4259-85d7-e7f2c69e4485', track.puids[6]
+    assert_equal 1, track.isrcs.size
+    assert_equal 'USPR37300012', track.isrcs[0]
   end
   
   # This test is similiar to silent_all_these_years_3, but it includes an
@@ -472,6 +555,9 @@ class TestMBXML < Test::Unit::TestCase
     assert_equal 7, track.puids.size
     assert_equal 'c2a2cee5-a8ca-4f89-a092-c3e1e65ab7e6', track.puids[0]
     assert_equal '42ab76ea-5d42-4259-85d7-e7f2c69e4485', track.puids[6]
+    assert track.rating.empty?
+    assert track.user_rating.empty?
+    assert track.isrcs.empty?
   end
   
   def test_track_silent_all_these_years_6
@@ -482,6 +568,16 @@ class TestMBXML < Test::Unit::TestCase
     assert_equal 'Silent All These Years', track.title
     assert_equal 253466, track.duration
     assert_equal 0, track.tags.size
+    assert_equal 1, track.user_tags.size
+    assert_equal 'foo', track.user_tags[0].text
+    assert_equal false, track.rating.empty?
+    assert_equal 4.5, track.rating.value
+    assert_equal 10, track.rating.count
+    assert_equal false, track.user_rating.empty?
+    assert_equal 3, track.user_rating.value
+    assert_equal 1, track.isrcs.size
+    assert_equal Model::ISRC.new("USPR37300012"), track.isrcs[0]
+    assert track.isrcs[0].is_a?(Model::ISRC)
   end
   
   def test_label_search
@@ -534,6 +630,8 @@ class TestMBXML < Test::Unit::TestCase
     assert_equal '2047', label.end_date.to_s
     assert_equal 1, label.aliases.size
     assert_equal 'Atlantic Rec.', label.aliases[0].name
+    assert label.rating.empty?
+    assert label.user_rating.empty?
   end
   
   def test_label_atlantic_records_3
@@ -547,6 +645,14 @@ class TestMBXML < Test::Unit::TestCase
     assert_equal 'american', label.tags[0].text
     assert_equal 'jazz', label.tags[1].text
     assert_equal 'blues', label.tags[2].text
+    assert_equal 2, label.user_tags.size
+    assert_equal 'american', label.user_tags[0].text
+    assert_equal 'jazz', label.user_tags[1].text
+    assert_equal false, label.rating.empty?
+    assert_equal 4.5, label.rating.value
+    assert_equal 10, label.rating.count
+    assert_equal false, label.user_rating.empty?
+    assert_equal 3, label.user_rating.value
   end
   
   def test_user_1
@@ -561,7 +667,7 @@ class TestMBXML < Test::Unit::TestCase
     assert_equal Model::NS_EXT_1 + 'RelationshipEditor', users[0].types[1]
   end
   
-  def test_new_with_factory
+  def test_artist_with_factory
     factory = MyFactory.new
     mbxml = Webservice::MBXML.new File.new(DATA_PATH + 'artist/Tori_Amos_2.xml'), factory
     artist = mbxml.get_entity(:artist)
@@ -571,4 +677,32 @@ class TestMBXML < Test::Unit::TestCase
     end
   end
   
+  def test_release_group_with_factory
+    factory = MyFactory.new
+    mbxml = Webservice::MBXML.new File.new(DATA_PATH + 'release-group/The_Cure_1.xml'), factory
+    release_group = mbxml.get_entity(:release_group)
+    assert release_group.is_a?(MyReleaseGroup)
+  end
+
+  def test_release_with_factory
+    factory = MyFactory.new
+    mbxml = Webservice::MBXML.new File.new(DATA_PATH + 'release/Highway_61_Revisited_1.xml'), factory
+    release = mbxml.get_entity(:release)
+    assert release.is_a?(MyRelease)
+  end
+
+  def test_label_with_factory
+    factory = MyFactory.new
+    mbxml = Webservice::MBXML.new File.new(DATA_PATH + 'label/Atlantic_Records_1.xml'), factory
+    label = mbxml.get_entity(:label)
+    assert label.is_a?(MyLabel)
+  end
+
+  def test_track_with_factory
+    factory = MyFactory.new
+    mbxml = Webservice::MBXML.new File.new(DATA_PATH + 'track/Silent_All_These_Years_1.xml'), factory
+    track = mbxml.get_entity(:track)
+    assert track.is_a?(MyTrack)
+  end
+
 end

@@ -1,4 +1,5 @@
-# $Id$
+# -*- coding: utf-8 -*-
+# $Id: individual.rb 254 2009-05-13 20:04:36Z phw $
 #
 # Author::    Philipp Wolfer (mailto:phw@rubyforge.org)
 # Copyright:: Copyright (c) 2007, Nigel Graham, Philipp Wolfer
@@ -6,7 +7,11 @@
 #             See LICENSE[file:../LICENSE.html] for permissions.
 
 require 'rbrainz/model/entity'
+require 'rbrainz/model/alias'
 require 'rbrainz/model/incomplete_date'
+require 'rbrainz/model/rateable'
+require 'rbrainz/model/relateable'
+require 'rbrainz/model/taggable'
 
 module MusicBrainz
   module Model
@@ -16,6 +21,10 @@ module MusicBrainz
     # Aggregates the common attributes of artists and labels.
     class Individual < Entity
     
+      include Rateable
+      include Relateable
+      include Taggable
+      
       # The name of the artist or label.
       attr_accessor :name
       

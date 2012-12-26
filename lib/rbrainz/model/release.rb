@@ -1,4 +1,5 @@
-# $Id$
+# -*- coding: utf-8 -*-
+# $Id: release.rb 278 2009-06-07 21:30:51Z phw $
 #
 # Author::    Philipp Wolfer (mailto:phw@rubyforge.org)
 # Copyright:: Copyright (c) 2007, Nigel Graham, Philipp Wolfer
@@ -8,6 +9,9 @@
 require 'rbrainz/model/entity'
 require 'rbrainz/model/release_event'
 require 'rbrainz/model/disc'
+require 'rbrainz/model/rateable'
+require 'rbrainz/model/relateable'
+require 'rbrainz/model/taggable'
 
 module MusicBrainz
   module Model
@@ -26,6 +30,10 @@ module MusicBrainz
     #        for more information.
     class Release < Entity
     
+      include Rateable
+      include Relateable
+      include Taggable
+      
       # A type for not a type. Currently unsupported by MusicBrainz
       TYPE_NONE           = NS_MMD_1 + 'None'
       
@@ -113,6 +121,9 @@ module MusicBrainz
       # See:: Utils#get_script_name
       attr_accessor :text_script
                     
+      # The release group this release is part of.
+      attr_accessor :release_group
+
       # The list of tracks.
       attr_reader :tracks
 
@@ -138,6 +149,7 @@ module MusicBrainz
       def initialize(id=nil, title=nil)
         super id
         self.title      = title
+        @release_groups = Collection.new
         @tracks         = Collection.new
         @release_events = Collection.new
         @discs          = Collection.new

@@ -1,4 +1,5 @@
-# $Id$
+# -*- coding: utf-8 -*-
+# $Id: mbid.rb 254 2009-05-13 20:04:36Z phw $
 #
 # Core extensions to add a to_mbid conversion to existing classes.
 # 

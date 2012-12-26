@@ -1,4 +1,5 @@
-# $Id$
+# -*- coding: utf-8 -*-
+# $Id: helper.rb 288 2009-08-04 12:50:09Z phw $
 #
 # Author::    Nigel Graham, Philipp Wolfer
 # Copyright:: Copyright (c) 2007, Nigel Graham, Philipp Wolfer
@@ -29,6 +30,20 @@ module MusicBrainz
         else
           return str
         end
+      end
+      
+      # Converts an entity type constant symbol into the proper string representation 
+      def entity_type_to_string(entity_type)
+        return entity_type.to_s.sub('_', '-')
+      end
+      
+      # Converts an entity type string into the proper symbol
+      def entity_type_to_symbol(entity_type)
+        unless entity_type.respond_to? :to_sym
+          return entity_type
+        end
+        entity_type = entity_type.to_sym
+        return entity_type.to_s.sub('-', '_').to_sym
       end
       
       # Check an options hash for required options.

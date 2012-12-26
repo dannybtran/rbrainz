@@ -1,4 +1,5 @@
-# $Id$
+# -*- coding: utf-8 -*-
+# $Id: test_range_equality.rb 254 2009-05-13 20:04:36Z phw $
 #
 # Author::    Nigel Graham (mailto:nigel_graham@rubyforge.org)
 # Copyright:: Copyright (c) 2007, Nigel Graham, Philipp Wolfer

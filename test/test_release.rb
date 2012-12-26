@@ -1,11 +1,15 @@
-# $Id$
+# -*- coding: utf-8 -*-
+# $Id: test_release.rb 278 2009-06-07 21:30:51Z phw $
 #
 # Author::    Philipp Wolfer (mailto:phw@rubyforge.org)
-# Copyright:: Copyright (c) 2007, Philipp Wolfer
+# Copyright:: Copyright (c) 2007-2009, Philipp Wolfer
 # License::   RBrainz is free software distributed under a BSD style license.
 #             See LICENSE[file:../LICENSE.html] for permissions.
 
 require 'test_entity'
+require 'test_rateable'
+require 'test_relateable'
+require 'test_taggable'
 
 # Unit test for the Release model.
 class TestRelease < Test::Unit::TestCase
@@ -13,6 +17,8 @@ class TestRelease < Test::Unit::TestCase
   def setup
     @tested_class = Model::Release
     @invalid_entity_types = [:artist, :track, :label]
+    
+    @release_groups = [Model::ReleaseGroup.new, Model::ReleaseGroup.new]
     @tracks = [Model::Track.new, Model::Track.new]
     @release_events = [Model::ReleaseEvent.new('DE', 2007), Model::ReleaseEvent.new('GB', 1996),
                        Model::ReleaseEvent.new('GB', '1996-06-01'), Model::ReleaseEvent.new('GB', '1996-06')]
@@ -24,6 +30,9 @@ class TestRelease < Test::Unit::TestCase
   
   # Include the tests for Entity
   include TestEntity
+  include TestRateable
+  include TestRelateable
+  include TestTaggable
 
   def test_new_release
     release = nil
@@ -104,6 +113,14 @@ class TestRelease < Test::Unit::TestCase
     assert_equal 0, release.types.size
   end
 
+  def test_release_group
+    release = Model::Release.new
+    release_group = Model::ReleaseGroup.new
+    assert release.release_group.nil?
+    assert_nothing_raised {release.release_group = release_group}
+    assert_equal release_group, release.release_group
+  end
+  
   # Many tracks can be added
   def test_add_and_remove_tracks
     release = Model::Release.new
@@ -179,7 +196,7 @@ class TestRelease < Test::Unit::TestCase
     assert release.single_artist_release?
     
     release.tracks[1].artist = Model::Artist.new('10bf95b6-30e3-44f1-817f-45762cdc0de0')
-    assert (not release.single_artist_release?)
+    assert release.single_artist_release? == false
   end
   
 end

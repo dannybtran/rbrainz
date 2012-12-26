@@ -1,4 +1,5 @@
-# $Id$
+# -*- coding: utf-8 -*-
+# $Id: test_artist_includes.rb 254 2009-05-13 20:04:36Z phw $
 #
 # Author::    Philipp Wolfer (mailto:phw@rubyforge.org)
 # Copyright:: Copyright (c) 2007, Philipp Wolfer
@@ -26,9 +27,13 @@ class TestArtistIncludes < Test::Unit::TestCase
       :track_rels => true,
       :label_rels => true,
       :url_rels => true,
+      :release_groups => true,
       :releases => [Model::Release::TYPE_ALBUM, 'Official'],
       :va_releases => ['Album', Model::Release::TYPE_OFFICIAL],
-      :tags => true
+      :tags => true,
+      :user_tags => true,
+      :ratings => true,
+      :user_ratings => true
       )
     result_string = includes.to_s
     assert_equal 'inc=', result_string[0..3]
@@ -40,6 +45,7 @@ class TestArtistIncludes < Test::Unit::TestCase
     assert result_array.include?('track-rels')
     assert result_array.include?('label-rels')
     assert result_array.include?('url-rels')
+    assert result_array.include?('release-groups')
     assert result_array.include?('sa-Album')
     assert result_array.include?('sa-Official')
     assert result_array.include?('va-Album')
@@ -55,9 +61,13 @@ class TestArtistIncludes < Test::Unit::TestCase
       :track_rels => false,
       :label_rels => false,
       :url_rels => false,
+      :release_groups => false,
       :releases => [],
       :va_releases => [],
-      :tags => false
+      :tags => false,
+      :user_tags => false,
+      :ratings => false,
+      :user_ratings => false
       )
     assert_equal '', includes.to_s
     

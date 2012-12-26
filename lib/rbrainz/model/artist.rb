@@ -1,4 +1,5 @@
-# $Id$
+# -*- coding: utf-8 -*-
+# $Id: artist.rb 258 2009-05-17 17:43:58Z phw $
 #
 # Author::    Philipp Wolfer (mailto:phw@rubyforge.org)
 # Copyright:: Copyright (c) 2007, Nigel Graham, Philipp Wolfer
@@ -6,7 +7,6 @@
 #             See LICENSE[file:../LICENSE.html] for permissions.
 
 require 'rbrainz/model/individual'
-require 'rbrainz/model/alias'
 
 module MusicBrainz
   module Model
@@ -36,6 +36,14 @@ module MusicBrainz
     
       # See Entity::ENTITY_TYPE.
       ENTITY_TYPE = :artist # :nodoc:
+      
+      # A Collection of release groups of this artist.
+      attr_reader :release_groups
+      
+      def initialize(id=nil, type=nil, name=nil, sort_name=nil)
+        super id, type, name, sort_name
+        @release_groups = Collection.new
+      end
       
     end
 

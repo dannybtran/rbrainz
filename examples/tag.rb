@@ -1,11 +1,12 @@
 #!/usr/bin/env ruby
+# -*- coding: utf-8 -*-
 #
 # Example script showing the use of folksonomy tagging with RBrainz.
 # It asks the user for his username and password and a MBID and queries the
 # MusicBrainz server for the tags, the user has applied to the entitity with
 # the given MBID. Afterwards the user can submit new tags.
 # 
-# $Id: getuser.rb 145 2007-07-19 13:11:44Z phw $
+# $Id: tag.rb 273 2009-05-24 22:29:04Z phw $
 
 # Just make sure we can run this example from the command
 # line even if RBrainz is not yet installed properly.

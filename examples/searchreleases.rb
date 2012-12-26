@@ -1,9 +1,10 @@
 #!/usr/bin/env ruby
+# -*- coding: utf-8 -*-
 #
 # Example script which searches the database for
 # releases and displays the release data.
 # 
-# $Id$
+# $Id: searchreleases.rb 260 2009-05-17 19:00:53Z phw $
 
 # Just make sure we can run this example from the command
 # line even if RBrainz is not yet installed properly.
@@ -13,8 +14,9 @@ $: << 'lib/' << '../lib/'
 require 'rbrainz'
 include MusicBrainz
 
-# Define the search parameters: Search for releases with the
-# title "Paradise Lost" and return a maximum of 10 releases.
+# Define the search parameters: Search for releases for the band
+# "Paradise Lost" (which has the MusicBrainz ID 10bf95b6-30e3-44f1-817f-45762cdc0de0)
+# and return a maximum of 10 releases.
 release_filter = Webservice::ReleaseFilter.new(
   :artistid => '10bf95b6-30e3-44f1-817f-45762cdc0de0',
   :limit => 10

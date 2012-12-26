@@ -1,4 +1,5 @@
-# $Id$
+# -*- coding: utf-8 -*-
+# $Id: Rakefile 291 2009-08-04 16:43:22Z phw $
 # Copyright (c) 2007, Philipp Wolfer
 # All rights reserved.
 # See LICENSE for permissions.
@@ -24,8 +25,7 @@ PKG_FILES = FileList[
   "examples/**/*.rb",
   "lib/**/*.rb",
   "test/**/*.rb",
-  "test/test-data/**/*",
-  "debian/*"
+  "test/test-data/**/*"
 ]
 PKG_EXTRA_RDOC_FILES = ['doc/README.rdoc', 'LICENSE', 'TODO', 'CHANGES']
 

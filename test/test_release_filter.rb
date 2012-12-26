@@ -1,4 +1,5 @@
-# $Id$
+# -*- coding: utf-8 -*-
+# $Id: test_release_filter.rb 264 2009-05-24 22:15:19Z phw $
 #
 # Author::    Philipp Wolfer (mailto:phw@rubyforge.org)
 # Copyright:: Copyright (c) 2007, Philipp Wolfer
@@ -25,6 +26,7 @@ class TestReleaseFilter < Test::Unit::TestCase
       :asin         => 'B00004VVW9',
       :lang         => 'ENG',
       :script       => 'Latn',
+      :cdstubs      => false,
       :limit        => 10,
       :offset       => 20,
       :query        => 'date:2000'
@@ -50,6 +52,7 @@ class TestReleaseFilter < Test::Unit::TestCase
     assert_equal @filter_hash[:asin], result_hash['asin'], filter_string
     assert_equal @filter_hash[:lang], result_hash['lang'], filter_string
     assert_equal @filter_hash[:script], result_hash['script'], filter_string
+    assert_equal 'no', result_hash['cdstubs'], filter_string
     assert_equal @filter_hash[:limit].to_s, result_hash['limit'], filter_string
     assert_equal @filter_hash[:offset].to_s, result_hash['offset'], filter_string
     assert_equal @filter_hash[:query].to_s, result_hash['query'], filter_string
@@ -66,7 +69,17 @@ class TestReleaseFilter < Test::Unit::TestCase
   
   def test_empty_filter
     filter = Webservice::ReleaseFilter.new({})
-    assert_equal '', filter.to_s
+    assert_equal 'cdstubs=no', filter.to_s
+  end
+  
+  def test_include_cdstubs
+    filter = Webservice::ReleaseFilter.new({ :cdstubs => true })
+    assert_equal 'cdstubs=yes', filter.to_s
+  end
+  
+  def test_exclude_cdstubs
+    filter = Webservice::ReleaseFilter.new({ :cdstubs => false })
+    assert_equal 'cdstubs=no', filter.to_s
   end
   
 end

@@ -1,4 +1,5 @@
-# $Id$
+# -*- coding: utf-8 -*-
+# $Id: data.rb 273 2009-05-24 22:29:04Z phw $
 #
 # Helper methods to deal with MusicBrainz data.
 #

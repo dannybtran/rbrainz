@@ -1,4 +1,5 @@
-# $Id$
+# -*- coding: utf-8 -*-
+# $Id: test_label.rb 258 2009-05-17 17:43:58Z phw $
 #
 # Author::    Philipp Wolfer (mailto:phw@rubyforge.org)
 # Copyright:: Copyright (c) 2007, Philipp Wolfer
@@ -6,6 +7,9 @@
 #             See LICENSE[file:../LICENSE.html] for permissions.
 
 require 'test_entity'
+require 'test_rateable'
+require 'test_relateable'
+require 'test_taggable'
 
 # Unit test for the Label model.
 class TestLabel < Test::Unit::TestCase
@@ -22,6 +26,9 @@ class TestLabel < Test::Unit::TestCase
   
   # Include the tests for Entity
   include TestEntity
+  include TestRateable
+  include TestRelateable
+  include TestTaggable
 
   def test_new_label
     label = nil

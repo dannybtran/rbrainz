@@ -1,4 +1,5 @@
-# $Id$
+# -*- coding: utf-8 -*-
+# $Id: default_factory.rb 273 2009-05-24 22:29:04Z phw $
 #
 # Author::    Philipp Wolfer (mailto:phw@rubyforge.org)
 # Copyright:: Copyright (c) 2007, Nigel Graham, Philipp Wolfer
@@ -7,6 +8,7 @@
 
 require 'rbrainz/model/artist'
 require 'rbrainz/model/label'
+require 'rbrainz/model/release_group'
 require 'rbrainz/model/release'
 require 'rbrainz/model/track'
 require 'rbrainz/model/user'
@@ -21,13 +23,15 @@ module MusicBrainz
       # <tt>:label</tt>, <tt>:release</tt> or <tt>:track</tt>).
       def new_entity(entity_type)
         case entity_type
-          when :artist
+          when Artist.entity_type
             new_artist
-          when :label
+          when Label.entity_type
             new_label
-          when :release
+          when ReleaseGroup.entity_type
+            new_release_group
+          when Release.entity_type
             new_release
-          when :track
+          when Track.entity_type
             new_track
         end
       end
@@ -38,6 +42,10 @@ module MusicBrainz
       
       def new_label
         Label.new
+      end
+      
+      def new_release_group
+        ReleaseGroup.new
       end
       
       def new_release
@@ -66,6 +74,10 @@ module MusicBrainz
       
       def new_tag
         Tag.new
+      end
+      
+      def new_rating
+        Rating.new
       end
       
       def new_user

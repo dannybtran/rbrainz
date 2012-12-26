@@ -1,7 +1,25 @@
 = Changelog
+== 0.5.2 (2011-04-29)
+* BUG: Fixed HTTP Digest authentication according to RFC 2617
+* BUG: Fixed include parameters user-tags and user-ratings
+* BUG: Fixed parser warning in tests
+* NEW: Support user tags
+* NEW: Added DCC as media format
 
-== 0.4.3 (not released)
+== 0.5.1 (2009-08-04)
+* BUG: Fixed querying for release groups
+
+== 0.5.0 (2009-06-14)
+* NEW: Support for release groups
+* NEW: Support for ISRCs, including ISRC submission
+* NEW: Support for ratings, including rating submission
+* NEW: Common exception class for all web service errors
+* NEW: Updated language list
+* NEW: Allow exclusion of CD stubs in ReleaseFilter
+* BUG: Added source file encodings for Ruby 1.9 compatibillity
 * BUG: Fixed Release#single_artist_release?
+* BUG: Added all missing include options for artists
+* BUG: Always raise a ConnectionError for unknown errors in the web service
 
 == 0.4.2 (2008-09-04)
 * BUG: Fixed proxy authentication
@@ -68,4 +86,4 @@
 == 0.1.0 (2007-05-23)
 * Initial release
 
-$Id$
+$Id: CHANGES 322 2011-04-28 20:16:42Z phw $

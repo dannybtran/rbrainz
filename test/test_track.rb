@@ -1,4 +1,5 @@
-# $Id$
+# -*- coding: utf-8 -*-
+# $Id: test_track.rb 303 2010-01-19 16:32:29Z phw $
 #
 # Author::    Philipp Wolfer (mailto:phw@rubyforge.org)
 # Copyright:: Copyright (c) 2007, Philipp Wolfer
@@ -6,6 +7,9 @@
 #             See LICENSE[file:../LICENSE.html] for permissions.
 
 require 'test_entity'
+require 'test_rateable'
+require 'test_relateable'
+require 'test_taggable'
 
 # Unit test for the Track model.
 class TestTrack < Test::Unit::TestCase
@@ -17,6 +21,8 @@ class TestTrack < Test::Unit::TestCase
     @artist = Model::Artist.new
     @valid_puids = ['9d30e408-1559-448b-b491-2f8de1583ccf',
                     '727ad90b-7ef4-48d2-8f16-c34016544822']
+    @valid_isrcs = [Model::ISRC.new('USPR37300012'),
+                    Model::ISRC.new('FRZ039101231')]
     @releases = [Model::Release.new, Model::Release.new]
   end
 
@@ -25,6 +31,9 @@ class TestTrack < Test::Unit::TestCase
   
   # Include the tests for Entity
   include TestEntity
+  include TestRateable
+  include TestRelateable
+  include TestTaggable
 
   def test_new_track
     track = nil
@@ -69,6 +78,7 @@ class TestTrack < Test::Unit::TestCase
   # Many PUIDs can be added
   def test_add_and_remove_puids
     track = Model::Track.new
+    assert track.puids.is_a?(Model::Collection)
     assert_equal 0, track.puids.size
     assert_nothing_raised {track.puids << @valid_puids[0]}
     assert_equal 1, track.puids.size
@@ -81,9 +91,26 @@ class TestTrack < Test::Unit::TestCase
     assert_equal 0, track.puids.size
   end
   
+  # Many ISRCs can be added
+  def test_add_and_remove_isrcs
+    track = Model::Track.new
+    assert track.isrcs.is_a?(Model::Collection)
+    assert_equal 0, track.isrcs.size
+    assert_nothing_raised {track.isrcs << @valid_isrcs[0]}
+    assert_equal 1, track.isrcs.size
+    assert_nothing_raised {track.isrcs << @valid_isrcs[1]}
+    assert_equal 2, track.isrcs.size
+    
+    assert_nothing_raised {track.isrcs.delete @valid_isrcs[1]}
+    assert_equal 1, track.isrcs.size
+    assert_nothing_raised {track.isrcs.delete @valid_isrcs[0]}
+    assert_equal 0, track.isrcs.size
+  end
+  
   # Many releases can be added
   def test_add_and_remove_releases
     track = Model::Track.new
+    assert track.releases.is_a?(Model::Collection)
     assert_equal 0, track.releases.size
     assert_nothing_raised {track.releases << @releases[0]}
     assert_equal 1, track.releases.size

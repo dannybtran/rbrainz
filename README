@@ -7,6 +7,6 @@ To generate the complete RBrainz documentation run
  
 The documentation will be stored in doc/api.
 
-RBrainz is Copyright (c) 2007 Philipp Wolfer and Nigel Graham.
+RBrainz is Copyright (c) 2007-2011 Philipp Wolfer and 2007 Nigel Graham.
 It is free softare distributed under a BSD style license. See
 LICENSE for details.

@@ -1,4 +1,5 @@
-# $Id$
+# -*- coding: utf-8 -*-
+# $Id: net_http_digest.rb 319 2011-04-19 20:49:49Z phw $
 #
 # Author::    Nigel Graham (mailto:nigel_graham@rubyforge.org)
 # Copyright:: Copyright (c) 2007, Nigel Graham, Philipp Wolfer
@@ -12,7 +13,7 @@ require 'net/http'
 
 module Net # :nodoc:
   module HTTPHeader # :nodoc:
-    @@nonce_count = -1
+    @@nonce_count = 0
     CNONCE = Digest::MD5.new.update("%x" % (Time.now.to_i + rand(65535))).hexdigest
     
     def select_auth(user,password,response)
@@ -58,15 +59,18 @@ module Net # :nodoc:
       params = {}
       $2.gsub(/(\w+)="(.*?)"/) { params[$1] = $2 }
 
+      qop = 'auth' if 
+        params['qop'] and params['qop'].split(',').include?('auth')
+
       a_1 = "#{user}:#{params['realm']}:#{password}"
       a_2 = "#{@method}:#{@path}"
       request_digest = ''
       request_digest << Digest::MD5.new.update(a_1).hexdigest
       request_digest << ':' << params['nonce']
-      if params['qop']
+      if qop
         request_digest << ':' << ('%08x' % @@nonce_count)
         request_digest << ':' << CNONCE
-        request_digest << ':' << params['qop'] 
+        request_digest << ':' << qop
       end
       request_digest << ':' << Digest::MD5.new.update(a_2).hexdigest
 
@@ -74,7 +78,7 @@ module Net # :nodoc:
       header << "Digest username=\"#{user}\""
       header << "realm=\"#{params['realm']}\""
 
-      header << "qop=#{params['qop']}" if params['qop']
+      header << "qop=#{qop}" if qop
 
       header << "algorithm=MD5"
       header << "uri=\"#{@path}\""
@@ -82,6 +86,7 @@ module Net # :nodoc:
       header << "nc=#{'%08x' % @@nonce_count}" if params['qop']
       header << "cnonce=\"#{CNONCE}\"" if params['qop']
       header << "response=\"#{Digest::MD5.new.update(request_digest).hexdigest}\""
+      header << "opaque=\"#{params['opaque']}\"" if params['opaque']
       
       return header
     end

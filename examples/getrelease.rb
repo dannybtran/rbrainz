@@ -1,9 +1,10 @@
 #!/usr/bin/env ruby
+# -*- coding: utf-8 -*-
 #
 # Example script which queries the database for an
 # release and displays the release's data.
 # 
-# $Id$
+# $Id: getrelease.rb 278 2009-06-07 21:30:51Z phw $
 
 # Just make sure we can run this example from the command
 # line even if RBrainz is not yet installed properly.
@@ -28,6 +29,7 @@ mbid = Model::MBID.parse(id, :release)
 release_includes = Webservice::ReleaseIncludes.new(
   :artist => true,
   :tracks => true,
+  :release_groups => true,
   :release_events => true
 )
 
@@ -47,6 +49,7 @@ print <<EOF
 ID            : #{release.id.uuid}
 Title         : #{release.title}
 Artist        : #{release.artist.unique_name}
+Release Group : #{release.release_group.title}
 Tracks        : #{release.tracks.to_a.join("\r\n                ")}
 Release Events:
 EOF

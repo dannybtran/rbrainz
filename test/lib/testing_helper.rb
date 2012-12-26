@@ -1,4 +1,5 @@
-# $Id$
+# -*- coding: utf-8 -*-
+# $Id: testing_helper.rb 254 2009-05-13 20:04:36Z phw $
 #
 # Usefull helper methods which are used in different test classes.
 #
@@ -13,4 +14,18 @@ def query_string_to_hash query_string
     v.gsub!('+', ' ')
     v.gsub!(/%([0-9a-f]{2})/i) { [$1.hex].pack 'C' }
   }
+end
+
+# True, if parent_class is one of the parent classes of child_class
+def assert_inherited_from child_class, parent_class, message=nil
+    result = false
+    klass = child_class
+    while not klass.nil?
+      if klass == parent_class
+        result = true
+        break
+      end
+      klass = klass.superclass
+    end
+    assert(result, message)
 end
